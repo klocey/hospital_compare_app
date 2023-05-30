@@ -1,8 +1,9 @@
-# hcris-app
-Python source code for the Rush [Hospital Cost Reports Application](https://hcris-app.herokuapp.com/), a Plotly Dash application that analyzes and provides cost reports based on those from The Centers for Medicare &amp; Medicaid Services (CMS) Healthcare Cost Report Information System (HCRIS).
+# hospital_compare_app
+Python source code for the Rush [Hospital Compare Application](https://hospital-compare.herokuapp.com/).
 
 ## Description and functionality
-The Rush [Hospital Cost Reports Application](https://hcris-app.herokuapp.com/) is a freely available and lightweight dashboard application for aggregating, analyzing, and downloading modified, simplified hospital cost reports. This open-source tool allows to compare cost report features among hospitals and across time, explore relationships between features, and design new cost report variables. 
+
+The Rush [hospital compare application](https://hospital-compare.herokuapp.com/) is a freely available and lightweight python-based Plotly dashboard application for aggregating, analyzing, and downloading data from the Rush [hospitals-data-archive] (https://github.com/Rush-Quality-Analytics/hospitals-data-archive). This open-source tool allows users to compare data features among hospitals and across time, to explore relationships between features, to design new features and examine them across time, and to download 700+ data features from any of 6,000+ hospitals, and for each year (and most yearly quarters) since 2013.
 
 ## How to run this app
 
@@ -68,7 +69,7 @@ These are automatically installed when following the instructions above.
 ## Files & Directories
 
 <details><summary>app.py</summary>	
-The primary file for running the Rush Hospital Cost Reports application. This file contains the entirety of source code for the app as well as many comments to explain the application's functionality.
+The primary file for running the Rush hospital compare application. This file contains the entirety of source code for the app as well as many comments to explain the application's functionality.
 </details>
 
 <details><summary>assets</summary>
@@ -92,7 +93,7 @@ This file lists all of the software libraries needed for the app to run. When de
 </details>
 
 <details><summary>runtime.txt</summary>
-This file is used when setting up the app to run on an online Heroku server. It contains a single line: `python-3.8.16, indicating the version of python to use. 
+This file is used when setting up the app to run on an online Heroku server. It contains a single line: `python-3.8.12, indicating the version of python to use. 
 </details>
 
 ## Developer 

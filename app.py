@@ -6,6 +6,7 @@ import dash_bootstrap_components as dbc
 from dash import dash_table
 
 import pandas as pd
+import plotly
 import plotly.graph_objects as go
 import plotly.express as px
 import warnings
@@ -398,7 +399,7 @@ def generate_control_card1():
                 children=[
                     
                      html.Div(
-                        [html.B(str(len(HOSPITALS_SET)) + " hospitals available", style={'fontSize':16,
+                        [html.B("6,095 Facility IDs", style={'fontSize':16,
                                                                                          'display': 'inline-block',
                                                                                          }),
                          html.B(id="text1", style={'fontSize':16, 
@@ -1106,6 +1107,7 @@ def get_urls(btn1, hospitals, hospital_options):
     url_ls = []
     for i, val in enumerate(hospitals):
         
+        val = val[-9:]
         prvdr = re.sub('\ |\?|\.|\!|\/|\;|\:', '', val)
         prvdr = prvdr[prvdr.find("(")+1:prvdr.find(")")]
         
@@ -1146,12 +1148,17 @@ def update_df1_tab1(urls, df):
         
         df.dropna(axis=1, how='all', inplace=True)
         df.reset_index(drop=True, inplace=True)
-                
+        
+        df = df[~df[('Name and Num', 'Name and Num')].isin([np.nan, float('NaN'), None])]
+        df = df.replace({None: np.nan})
+        df = df.replace({'Not Available': np.nan})
+        
         num_h = len(df[('Facility ID', 'Facility ID')].unique())
         return df.to_json(), ", " + str(num_h) + " Loaded"
 
     else:
         df = pd.read_json(df)
+        
         df = df[df["('data url', 'data url')"].isin(urls)]
         df_urls = df["('data url', 'data url')"].unique()
         
@@ -1160,15 +1167,16 @@ def update_df1_tab1(urls, df):
         if len(url_ls) > 0:
             df2 = 0
             for i, url in enumerate(url_ls):
+                
                 tdf = pd.read_csv(url, header=[0,1], index_col=[0])
                 tdf[('data url', 'data url')] = [url] * tdf.shape[0]
-                tdf[('Name and Num', 'Name and Num')] = tdf['Facility Name'] + ' (' + tdf['Facility ID'] + ')'
                 
                 if i == 0:
                     df2 = tdf.copy(deep=True)
                 else:
                     df2 = pd.concat([df2, tdf]) 
             
+            df2.reset_index(inplace=True)
             df2 = df2.to_json()
             df2 = pd.read_json(df2)
             df = pd.concat([df, df2])
@@ -1176,6 +1184,11 @@ def update_df1_tab1(urls, df):
         
         df.dropna(axis=1, how='all', inplace=True)
         df.reset_index(drop=True, inplace=True)
+        
+        x = "('Name and Num', 'Name and Num')"
+        df = df[~df[x].isin([np.nan, float('NaN'), None])]
+        df = df.replace({None: np.nan})
+        df = df.replace({'Not Available': np.nan})
         
         num_h = len(df["('Name and Num', 'Name and Num')"].unique())
         
@@ -1625,6 +1638,11 @@ def update_data_report_plot1(n_clicks, df, var1, var2, focal_h):
     fig_data = []
     
     x = "('Name and Num', 'Name and Num')"
+    df = df[~df[x].isin([np.nan, float('NaN'), None])]
+    
+    str_ = "('" + var1 + "', '" + var2 + "')"
+    df[str_] = pd.to_numeric(df[str_], errors='coerce')
+    
     hospitals = sorted(df[x].unique())
     
     try:
@@ -1636,35 +1654,27 @@ def update_data_report_plot1(n_clicks, df, var1, var2, focal_h):
     for i, hospital in enumerate(hospitals):
             
         sub_df = df[df[x] == hospital]
-        
-        sub_df.sort_values(by=["('file date', 'file date')"],
-                                ascending=True, inplace=True)
-           
+        sub_df.sort_values(by=["('file date', 'file date')"], ascending=True, inplace=True)
         dates = sub_df["('file date', 'file date')"]
         
-        str_ = var1 + "', '" + var2 + "')"
+        str_ = "('" + var1 + "', '" + var2 + "')"
         column = [col for col in sub_df.columns if col.endswith(str_)]  
         
         if len(column) == 0:
             fig = go.Figure(data=go.Scatter(x = [0], y = [0]))
 
-            fig.update_yaxes(title_font=dict(size=14, 
-                                             color="rgb(38, 38, 38)"))
-            fig.update_xaxes(title_font=dict(size=14, 
-                                             color="rgb(38, 38, 38)"))
+            fig.update_yaxes(title_font=dict(size=14, color="rgb(38, 38, 38)"))
+            fig.update_xaxes(title_font=dict(size=14, color="rgb(38, 38, 38)"))
 
             fig.update_layout(title_font=dict(size=14, 
-                              color="rgb(38, 38, 38)", 
-                              ),
+                              color="rgb(38, 38, 38)"),
                               showlegend=True,
                               height=452,
                               margin=dict(l=100, r=10, b=10, t=10),
                               paper_bgcolor="#f0f0f0",
-                              plot_bgcolor="#f0f0f0",
-                              )
+                              plot_bgcolor="#f0f0f0")
             
             return fig
-        
         
         column = column[0]
         obs_y = sub_df[column].tolist()     
@@ -1689,21 +1699,62 @@ def update_data_report_plot1(n_clicks, df, var1, var2, focal_h):
                     )
                 )
         
-        txt_ = '<b>' + var1 + '<b>'
-        var2b = re.sub("\(.*?\)|\[.*?\]","", var2)
         
-        if len(var2b) > 40:
-            var_ls = []
-            for j in range(0, len(var2b), 40):
-                var_ls.append(var2b[j : j + 40])
+        
+    str_ = "('" + var1 + "', '" + var2 + "')"
+    tdf = pd.DataFrame(columns=['mean', 'median', 'std'])
+    tdf['mean'] = df.groupby("('file date', 'file date')")[str_].mean()
+    tdf['median'] = df.groupby("('file date', 'file date')")[str_].median()
+    tdf['std'] = df.groupby("('file date', 'file date')")[str_].std()
+    tdf['file_date'] = tdf.index
+    
+    fig_data.append(
+                    go.Scatter(
+                        x=tdf['file_date'],
+                        y=tdf['mean'],
+                        name='Mean',
+                        mode='lines',
+                        #marker=dict(color='#ff0000'),
+                        line = dict(color='#ff0000', width=2),
+                    )
+            )
+    
+    fig_data.append(
+                    go.Scatter(
+                        x=tdf['file_date'],
+                        y=tdf['mean'] + tdf['std'],
+                        name='mean + 1 std',
+                        mode='lines',
+                        line = dict(color='#ff6666', width=2, dash='dash'),
+                    )
+            )
+    
+    fig_data.append(
+                    go.Scatter(
+                        x=tdf['file_date'],
+                        y=tdf['mean'] - tdf['std'],
+                        name='mean - 1 std',
+                        mode='lines',
+                        line = dict(color='#ff6666', width=2, dash='dash'),
+                    )
+            )
+    
+        
+        
+    txt_ = '<b>' + var1 + '<b>'
+    var2b = re.sub("\(.*?\)|\[.*?\]","", var2)
+        
+    if len(var2b) > 40:
+        var_ls = []
+        for j in range(0, len(var2b), 40):
+            var_ls.append(var2b[j : j + 40])
             
+        for j in var_ls:
+            txt_ = txt_ + '<br>' + j 
+    else:
+        txt_ = txt_ + '<br>' + var2b 
             
-            for j in var_ls:
-                txt_ = txt_ + '<br>' + j 
-        else:
-            txt_ = txt_ + '<br>' + var2b 
-            
-        figure = go.Figure(
+    figure = go.Figure(
             data=fig_data,
             layout=go.Layout(
                 transition = {'duration': 500},
@@ -1743,9 +1794,9 @@ def update_data_report_plot1(n_clicks, df, var1, var2, focal_h):
                 paper_bgcolor="#f0f0f0",
                 plot_bgcolor="#f0f0f0",
             ),
-        )
+    )
         
-        figure.update_layout(
+    figure.update_layout(
             legend=dict(
                 traceorder="normal",
                 font=dict(
@@ -1754,7 +1805,8 @@ def update_data_report_plot1(n_clicks, df, var1, var2, focal_h):
                 ),
                 
             )
-        )    
+    )    
+    
     
     del df
     del hospitals
@@ -1811,8 +1863,16 @@ def update_data_report_plot2(n_clicks, xvar1, xvar2, yvar1, yvar2, xscale, yscal
     
     fig_data = []
     
+    x = "('Name and Num', 'Name and Num')"
+    df = df[~df[x].isin([np.nan, float('NaN'), None])]
+    df = df.replace({None: np.nan})
+    df = df.replace({'Not Available': np.nan})
+    
     str_1 = xvar1 + "', '" + xvar2 + "')"
     str_2 = yvar1 + "', '" + yvar2 + "')"
+    
+    df[str_1] = pd.to_numeric(df["('" + str_1], errors='coerce')
+    df[str_2] = pd.to_numeric(df["('" + str_2], errors='coerce')
     
     column1 = [col for col in df.columns if col.endswith(str_1)]
     column2 = [col for col in df.columns if col.endswith(str_2)]
@@ -1848,7 +1908,7 @@ def update_data_report_plot2(n_clicks, xvar1, xvar2, yvar1, yvar2, xscale, yscal
     for i, hospital in enumerate(hospitals):
         
         tdf = df[df["('Name and Num', 'Name and Num')"] == hospital]
-        
+                
         column1 = [col for col in tdf.columns if col.endswith(str_1)]
         column2 = [col for col in tdf.columns if col.endswith(str_2)]
         
@@ -2499,6 +2559,9 @@ def update_data_report_plot3(n_clicks, df, numer1, numer2, denom1, denom2, focal
         return fig
     
     
+    x = "('Name and Num', 'Name and Num')"
+    df = df[~df[x].isin([np.nan, float('NaN'), None])]
+    
     hospitals = sorted(df["('Name and Num', 'Name and Num')"].unique())
     
     try:
@@ -2637,5 +2700,5 @@ def update_output15(value):
 
 # Run the server
 if __name__ == "__main__":
-    app.run_server(host='0.0.0.0', debug = True) # modified to run on linux server
+    app.run_server(host='0.0.0.0', debug = False) # modified to run on linux server
 

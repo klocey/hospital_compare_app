@@ -105,7 +105,7 @@ sub_categories.remove('HAC, Fiscal Year')
 sub_categories.remove('file date, file date')
 sub_categories.sort()
 
-url = 'https://raw.githubusercontent.com/klocey/hospitals-data-archive/main/MergeFacilityFiles/dataframe_data/hospitals/010001.csv'
+url = 'https://raw.githubusercontent.com/Rush-Quality-Analytics/hospitals-data-archive/main/hospital_files/010001.csv'
 
 main_df = pd.read_csv(url, index_col=[0], header=[0, 1])
 main_df = pd.DataFrame(columns = main_df.columns)
@@ -1111,7 +1111,7 @@ def get_urls(btn1, hospitals, hospital_options):
         prvdr = re.sub('\ |\?|\.|\!|\/|\;|\:', '', val)
         prvdr = prvdr[prvdr.find("(")+1:prvdr.find(")")]
         
-        url = 'https://raw.githubusercontent.com/klocey/hospitals-data-archive/main/MergeFacilityFiles/dataframe_data/hospitals/' + prvdr + '.csv'
+        url = 'https://raw.githubusercontent.com/Rush-Quality-Analytics/hospitals-data-archive/main/hospital_files/' + prvdr + '.csv'
         url_ls.append(url)
     
     #txt = ', ' + str(len(hospitals)) + ' selected'

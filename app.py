@@ -53,12 +53,21 @@ gendat_df['State'] = gendat_df['State'].replace(np.nan, 'Not given')
 gendat_df['Hospital Type'] = gendat_df['Hospital Type'].replace(np.nan, 'Not given')
 gendat_df['Hospital Ownership'] = gendat_df['Hospital Ownership'].replace(np.nan, 'Not given')
 
+gendat_df.loc[gendat_df['Name and Num'] == ' HIMA SAN PABLO BAYAMON (400109)', 'Name and Num'] = 'HIMA SAN PABLO BAYAMON (400109)'
+gendat_df.loc[gendat_df['Name and Num'] == ' KETCHIKAN MEDICAL CENTER (021311)', 'Name and Num'] = 'KETCHIKAN MEDICAL CENTER (021311)'
+gendat_df.loc[gendat_df['Name and Num'] == '(CLOSED) CUMBERLAND RIVER HOSPITAL (441319)', 'Name and Num'] = 'CUMBERLAND RIVER HOSPITAL (441319)'
+gendat_df.loc[gendat_df['Name and Num'] == '1st Medical Group (Langley AFB) (49005F)', 'Name and Num'] = 'Langley AFB (49005F)'
+gendat_df.loc[gendat_df['Name and Num'] == '60th Medical Group (Travis AFB) (05015F)', 'Name and Num'] = 'Langley AFB (49005F)'
+gendat_df.loc[gendat_df['Name and Num'] == '633rd Medical Group (Joint Base Langley-Eustis) (49005F)', 'Name and Num'] = 'Langley AFB (49005F)'
+gendat_df.loc[gendat_df['Name and Num'] == '673rd Medical Group (Joint Base Elmendorf-Richardson) (02013F)', 'Name and Num'] = 'Elmendorf-Richardson Joint Base (02013F)'
+gendat_df.loc[gendat_df['Name and Num'] == '81st Medical Group (Keesler AFB) (25039F)', 'Name and Num'] = 'Keesler AFB (25039F)'
+gendat_df.loc[gendat_df['Name and Num'] == '88th Medical Group (Wright-Patterson AFB) (36006F)', 'Name and Num'] = 'Wright-Patterson AFB (36006F)'
+gendat_df.loc[gendat_df['Name and Num'] == '96th Medical Group (Eglin AFB) (10021F)', 'Name and Num'] = 'Eglin AFB (10021F)'
+gendat_df.loc[gendat_df['Name and Num'] == '99th Medical Group (Nellis AFB) (29001F)', 'Name and Num'] = 'Nellis AFB (29001F)'
+
 ######################## SELECTION LISTS #####################################
 
 HOSPITALS = gendat_df['Name and Num'].tolist()
-
-CMS_NUMS = len(gendat_df['Facility ID'].unique()) 
-
 beds = gendat_df['Beds'].tolist()
 
 states = gendat_df['State'].tolist()
@@ -71,18 +80,8 @@ states = ['NaN' if x is np.nan else x for x in states]
 htypes = ['NaN' if x is np.nan else x for x in htypes]
 ctypes = ['NaN' if x is np.nan else x for x in ctypes]
 
-#HOSPITALS, beds, states, htypes, ctypes = (list(t) for t in zip(*sorted(zip(HOSPITALS, beds, states, htypes, ctypes))))
 HOSPITALS_SET = sorted(list(set(HOSPITALS)))
 
-ls = [' HIMA SAN PABLO BAYAMON (400109)', ' KETCHIKAN MEDICAL CENTER (021311)', '(CLOSED) CUMBERLAND RIVER HOSPITAL (441319)', 
-      '1st Medical Group (Langley AFB) (49005F)', '60th Medical Group (Travis AFB) (05015F)', 
-      '633rd Medical Group (Joint Base Langley-Eustis) (49005F)', '673rd Medical Group (Joint Base Elmendorf-Richardson) (02013F)', 
-      '81st Medical Group (Keesler AFB) (25039F)', '88th Medical Group (Wright-Patterson AFB) (36006F)', 
-      '96th Medical Group (Eglin AFB) (10021F)', '99th Medical Group (Nellis AFB) (29001F)']
-for l in ls:
-    HOSPITALS_SET.remove(l)
-    
-HOSPITALS_SET.extend(ls)
 ddfs = "100%"
 
 with open('dataframe_data/report_categories.csv', newline='') as csvfile:
@@ -111,7 +110,7 @@ main_df = pd.read_csv(url, index_col=[0], header=[0, 1])
 main_df = pd.DataFrame(columns = main_df.columns)
 
 print(main_df.shape[1], 'features')
-print(CMS_NUMS, 'CMS numbers')
+print(len(gendat_df['Facility ID'].unique()), 'CMS numbers')
 print(len(list(set(HOSPITALS))), 'hospitals')
 
 random.seed(42)
